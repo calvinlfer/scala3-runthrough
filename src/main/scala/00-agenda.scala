@@ -23,7 +23,7 @@
   *     - Export clauses (proxies)
   *     - Parameter untupling
   *
-  *   - Part 3
+  *   - Part 4
   *     - inline
   *     - deriving
   *     - macros

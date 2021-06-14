@@ -1,8 +1,31 @@
-## sbt project compiled with Scala 3
+### A tour of Scala 3 ###    
 
-### Usage
+- **Part 1**
+  - Braceless syntax
+  - Enums
+  - Case class improvements
+  - Extension methods
+  - Typeclasses
 
-This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
+- **Part 2**
+  - Intersection types
+  - Union types
+  - Match types
+  - Opaque types
+  - Polymorphic function types
+  - Dependent function types
 
-For more information on the sbt-dotty plugin, see the
-[scala3-example-project](https://github.com/scala/scala3-example-project/blob/main/README.md).
+- **Part 3**
+  - Context functions
+  - Singleton types
+  - Trait parameters
+  - Explicit nulls (via -Yexplicit-nulls)
+  - Creator application
+  - Export clauses (proxies)
+  - Parameter untupling
+
+- **Part 4**
+  - inline
+  - deriving
+  - macros
+
