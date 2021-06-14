@@ -106,13 +106,12 @@ object match_types:
 
   type Combine[Left, Right] =
     Left match
-      case Unit =>
-        Right
+      case Unit => Right
 
-      case ? => // ? is wildcard
-        Right match
-          case Unit => Left
-          case ?    => (Left, Right)
+      // ? is wildcard
+      case ? =>    Right match
+        case Unit => Left
+        case ?    => (Left, Right)
 
   val unitAndString: Combine[Unit, String] = "Hello"
   val stringAndUnit: Combine[String, Unit] = "Hello"
@@ -227,3 +226,90 @@ object opaque_types:
 
   def printEmail(e: Email2): Unit = println(e)
   //printEmail("reverse is not true")
+
+/**
+ * POLYMORPHIC FUNCTION TYPES
+ *
+ * Scala 3 introduces polymorphic function types, which gives functions the ability to be
+ * parametrically polymorphic. In Scala 2.x, only methods may be parametrically polymorphic.
+ *
+ * In Scala 2.x, functions were not as powerful as methods (you did not have polymorphic functions)
+ */
+object polymorphic_function_types:
+  def identityMethod[A](a: A): A = a
+  val identityFn: [X] =>     X  => X =    // type level ([A] introduces a new type parameter)
+                  [A] => (a: A) => a  // value level
+
+  val curryFn: [A, B] =>     A  =>     B  => (A, B) =
+               [X, Y] => (x: X) => (y: Y) => (x, y)
+
+  // Type lambda syntax
+  type IdentityLambda = [A] =>> A => A
+  val example: IdentityLambda[Int] = identityFn[Int]
+
+/**
+ * DEPENDENT FUNCTION TYPES
+ *
+ * Scala 3 introduces dependent function types, which give function types the ability to model
+ * path-dependent functions that were previously only possible using methods.
+ */
+object dependent_functions:
+  trait Entry:
+    type Out
+
+  def getMethod(entry: Entry): entry.Out = ???
+
+  lazy val getFn: (e: Entry) => e.Out =       // type level (parameter names inside the type!!!)
+                  (e: Entry) => getMethod(e)  // value level
+
+  type XMorePrecise = (e: Entry) => e.Out   // e's Out specifically
+  type XLessPrecise = Entry => Entry#Out    // Any Entry#Out
+
+  trait Combine[L, R]:
+    type Out
+    def combine[L, R](l: L, r: R): Out
+
+  def combineMethod[L, R](l: L, r: R, c: Combine[L, R]): c.Out = c.combine(l, r)
+
+  lazy val combineFn: [A, B] => (l: A, r: B, c: Combine[A, B]) => c.Out = 
+                      [L, R] => (l: L, r: R, c: Combine[L, R]) => c.combine(l, r)
+
+/**
+ * Scala 3 introduces first-class support for "type lambdas", which previously had to
+ * be emulated using structural types and type projection, and gave rise to the popular
+ * "kind-projector" plug-in as a way of simplifying their expression.
+ */
+object type_lambdas:
+  type MapK[K] = [V] =>> Map[K, V]
+
+  type MapString[V] = MapK[String][V]
+
+  // requirement for a higher kinded type with one slot
+  trait Sizable[F[_]]:
+    def size[A](fa: F[A]): Int
+
+  val sizableList = new Sizable[List]:
+    def size[A](fa: List[A]): Int = fa.length
+
+  // Map is a higher kinded type with two slots - but Sizable expects one slot
+  // Partially apply the Key in the Map so we are left with one type parameter (see MapK)
+  // Before: combine type projection, structural types
+  // No more!
+  def Scala2SizableMap[K]: Sizable[{type MapK[V] = Map[K, V]}#MapK] = sizableMap[K]
+
+  // Scala 2's Kind projector plugin (-Ykind-projector in Scala 3) syntax: Sizable[Map[K, *]]
+
+  // First class support in Scala 3
+  def sizableMap[K]: Sizable[[V] =>> Map[K, V]] =
+    new Sizable[[V] =>> Map[K, V]]:
+      def size[A](fa: Map[K, A]): Int = fa.size
+
+
+  type Flip[F[_, _]] = [A, B] =>> F[B, A]
+
+  type FlippedMap[K, V] = Flip[Map][K, V]
+  val map: FlippedMap[String, Int] = Map.empty[Int, String]
+
+  type Curry[F[_, _]] = [A] =>> [B] =>> F[A, B]
+
+  val anotherMap: Curry[Map][String][Int] = Map.empty[String, Int]
