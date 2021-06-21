@@ -33,6 +33,21 @@ package enums:
     case Neptune extends Planet(1.024e+26, 2.4746e7)
   end Planet
 
+  // Emulate sealed trait of sealed traits
+  //  sealed trait Event
+  //  sealed trait UserEvent extends Event
+  //  sealed trait DeviceEvent extends Event
+  enum Event:
+    case User(user: UserEvent)
+    case Device(device: DeviceEvent)
+
+  enum UserEvent:
+    case Registered(id: String)
+    case Anonymous
+
+  enum DeviceEvent:
+    case Device(id: String)
+
   // automatic support for variance
   enum Result[+Error, +Value]:
     case Succeed(value: Value)
